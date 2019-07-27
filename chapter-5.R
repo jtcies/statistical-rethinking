@@ -2,7 +2,6 @@ library(tidyverse)
 library(rethinking)
 
 theme_set(theme_minimal())
-
 data(milk)
 
 d <- milk
@@ -32,7 +31,7 @@ xseq <- seq( from=min(dcc$M)-0.15 , to=max(dcc$M)+0.15 , length.out=30 )
 mu <- link(m5.7 , data = data.frame(M = xseq , N = 0))
 
 data.frame(
-  mu_mean = apply(mu,2,mean)
+  mu_mean = apply(mu,2,mean),
   low_bound = apply(mu,2,PI)[1, ],
   high_bound = apply(mu,2,PI)[2, ]
 )
