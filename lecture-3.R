@@ -31,8 +31,8 @@ map2_dfr(a, b, lin_mod) %>%
 set.seed(2971)
 
 a2 <- rnorm(N, 178, 20)
-b2 <- rlnorm(N, 0 ,1)
+b2 <- rlnorm(N, 0 ,10)
 
-map2_dfr(a2, b2, lin_mod) %>% 
+map2_dfr(a2, b2, lin_mod) 
   ggplot(aes(x, mu, group = paste(a,b))) +
   geom_line(alpha = 0.2)
