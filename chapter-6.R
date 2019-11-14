@@ -67,3 +67,70 @@ coordinates(fox_dag) <- list(
 plot(fox_dag)
 
 impliedConditionalIndependencies(fox_dag)
+
+adjustmentSets(fox_dag, exposure = "A", outcome = "W")
+
+# waffle house questions (6H)
+
+data(WaffleDivorce)
+
+d <- WaffleDivorce %>%
+    tbl_df()
+
+wh_dag <- dagitty( "dag {
+    S -> A -> D
+    S -> M -> D
+    S -> W -> D
+    A -> M
+}")
+
+coordinates(wh_dag) <- list(
+    x = c(S = 0, W = 2, D = 2, M = 1, A = 0),
+    y = c(S = 0, W = 0, D = 2, M = 1, A = 2)
+)
+
+plot(wh_dag)
+
+adjustmentSets(wh_dag, exposure = "W", outcome = "D")
+
+ds <- d %>%
+    mutate(
+        D = scale(Divorce),
+        W = scale(WaffleHouses),
+        M = scale(Marriage),
+        A = scale(MedianAgeMarriage),
+        S = South
+    )
+
+wh_m1  <- quap(
+     alist(
+        D ~ dnorm(mu, sigma),
+        mu <- a + bw * W + bs * S,
+        a ~ dnorm(0, 0.2),
+        bw ~ dnorm(0, 0.5),
+        bs ~ dnorm(0, 0.5),
+        sigma ~ dexp(1)
+    ), data = ds
+)
+
+precis(wh_m1)
+
+adjustmentSets(wh_dag, exposure = "S", outcome = "D")
+
+wh_m2  <- quap(
+     alist(
+        W ~ dnorm(mu, sigma),
+        mu <- a + bm * M + bs * S,
+        a ~ dnorm(0, 0.2),
+        bs ~ dnorm(0, 0.5),
+        bm ~ dnorm(0, 0.5),
+        sigma ~ dexp(1)
+    ), data = ds
+)
+
+precis(wh_m2)
+
+adjustmentSets(wh_dag, exposure = "M", outcome = "D")
+
+impliedConditionalIndependencies(wh_dag)
+
