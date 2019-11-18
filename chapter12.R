@@ -125,3 +125,33 @@ sim(m12_6, data = sim_m12_6) %>%
   ggplot(aes(pred, fill = factor(I))) +
     geom_histogram(binwidth = 1, position = "dodge") +
     facet_grid(A ~ C)
+
+# 12.4 ordered categorical predictors -----------------
+
+data(Trolley)
+
+t <- Trolley
+
+edu_levels <- c(6, 1, 8, 4, 7, 2, 5, 3)
+t$edu_leveled <- edu_levels[t$edu]
+
+dat_m12_7 <- list(
+  R = t$response,
+  A = t$action,
+  I = t$intention,
+  C = t$contact,
+  E = as.integer(t$edu_leveled),
+  alpha = rep(2, 7)
+)
+
+m12_7 <- ulam(
+  alist(
+    R ~ dordlogit(phi, kappa),
+    phi <- bE * sum(delta_j[1:E]) + bA * A + bI * I + bC * C,
+    kappa ~ dnorm(0, 1.5),
+    c(bA, bI, bC, bE) ~ dnorm(0, 1),
+    vector[8]: delta_j <<- append_row(0, delta),
+    simplex[7]: delta ~ dirichlet(alpha)
+  ),
+  data = dat_m12_7
+)
