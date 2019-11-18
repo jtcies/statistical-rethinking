@@ -75,3 +75,53 @@ tibble(x = 1:(length(coef(m12_5)) + 1), y = c(inv_logit(coef(m12_5)), 1)) %>%
     geom_line() +
     geom_col(aes(y = z))
 
+
+t2_dat <- list(
+  R = t$response,
+  A = t$action,
+  I = t$intention,
+  C = t$contact
+)
+
+m12_6 <- ulam(
+  alist(
+    R ~ dordlogit(phi, cutpoints),
+    phi <- bA * A + bC * C + BI * I,
+    BI <- bI + bIA * A + bIC * C,
+    c(bA, bI, bC, bIA, bIC) ~ dnorm(0, 0.5),
+    cutpoints ~ dnorm(0, 1.5)
+  ),
+  data = t2_dat
+)
+
+precis(m12_6)
+
+extract.samples(m12_6) %>%
+  as_tibble() %>% 
+  select(starts_with("b")) %>% 
+  gather(param, est) %>% 
+  group_by(param) %>% 
+  summarise(
+    mean = mean(est),
+    pi_low = PI(est)[1],
+    pi_high = PI(est)[2]
+  ) %>% 
+  ggplot(aes(param, mean)) +
+    geom_point() +
+    geom_linerange(aes(ymin = pi_low, ymax = pi_high)) +
+    coord_flip()
+
+sim_m12_6 <- crossing(
+  A = 0:1,
+  C = 0:1,
+  I = 0:1
+) %>% 
+  mutate(combn = paste0("V", row_number()))
+
+sim(m12_6, data = sim_m12_6) %>% 
+  as_tibble() %>% 
+  gather(combn, pred) %>% 
+  left_join(sim_m12_6) %>% 
+  ggplot(aes(pred, fill = factor(I))) +
+    geom_histogram(binwidth = 1, position = "dodge") +
+    facet_grid(A ~ C)
