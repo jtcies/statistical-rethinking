@@ -155,3 +155,7 @@ m12_7 <- ulam(
   ),
   data = dat_m12_7
 )
+
+precis(m12_7, depth = 2)
+
+pairs(m12_7, pars = "delta")
