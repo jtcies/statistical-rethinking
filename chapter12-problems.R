@@ -18,8 +18,7 @@ dat_list <- list(
 fixed_model <- ulam(
     alist(
         contraception ~ dbinom(1, p),
-        logit(p) <- a + b[district_id],
-        a ~ dnorm(0, 1),
+        logit(p) <- b[district_id],
         b[district_id] ~ dnorm(0, 0.5)
     ), 
     data = dat_list
@@ -28,10 +27,9 @@ fixed_model <- ulam(
 mixed_model <- ulam(
     alist(
         contraception ~ dbinom(1, p),
-        logit(p) <- a_bar + b[district_id] * sigma_dist,
+        logit(p) <- b[district_id] * sigma_dist,
         b[district_id] ~ dnorm(0, 1),
-        sigma_dist ~ dexp(1),
-        a_bar ~ dnorm(0, 0.5)
+        sigma_dist ~ dexp(1)
     ), 
     data = dat_list
 )
@@ -49,5 +47,27 @@ apply_preds <- function(model, data) {
 
 fixed_preds <- apply_preds(fixed_model, preds)
 mixed_preds <- apply_preds(mixed_model, preds)
+
+fixed_post <- preds %>%
+    mutate(
+        type = "fixed",
+        mean = fixed_preds$mean,
+        lower = fixed_preds$lower,
+        higher = fixed_preds$higher
+    )
+
+mixed_post  <- preds %>%
+    mutate(
+        type = "mixed",
+        mean = mixed_preds$mean,
+        lower = mixed_preds$lower,
+        higher = mixed_preds$higher
+    )
+
+bind_rows(fixed_post, mixed_post) %>%
+    ggplot(aes(district_id, mean, ymax = higher, ymin = lower, color = type)) +
+        geom_point(position = position_dodge(width = 0.5)) + 
+        geom_linerange(position = position_dodge(width = 0.5))
+
 
 
